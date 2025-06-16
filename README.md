@@ -72,7 +72,7 @@ Cada módulo (no-central, no-borda, gateway, brinco-simulado) deve ser tratado c
 ### **1\. Estrutura do Projeto**
 
 Os diretórios estão organizados da seguinte forma:
-  
+
 src/main/java  
 ├── no-central/  
 │   ├── pom.xml  
@@ -95,7 +95,8 @@ Certifique-se de que cada diretório de módulo (no-central, no-borda, gateway, 
 ### **3\. Compilar Cada Módulo**
 
 Para cada módulo, navegue até o seu diretório raiz (ex: seu\_projeto\_distribuido/no-central/) no terminal e execute o comando Maven para compilar e empacotar:  
-mvn clean package
+
+>mvn clean package
 
 Este comando criará um arquivo JAR executável (\*-jar-with-dependencies.jar) na pasta target/ de cada módulo.
 
@@ -106,8 +107,8 @@ Você precisará de vários terminais abertos para este processo.
 #### **a. Iniciar Nó Central**
 
 1. **Execute o Nó Central:**  
-   cd seu\_projeto\_distribuido/no-central/  
-   java \-jar target/no-central-1.0-SNAPSHOT-jar-with-dependencies.jar
+   >cd seu\_projeto\_distribuido/no-central/  
+   >java \-jar target/no-central-1.0-SNAPSHOT-jar-with-dependencies.jar
 
    O Nó Central começará a ouvir na porta 12345\.  
 2. Exponha o Nó Central com ngrok:  
