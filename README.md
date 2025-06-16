@@ -73,7 +73,7 @@ Cada módulo (no-central, no-borda, gateway, brinco-simulado) deve ser tratado c
 
 Os diretórios estão organizados da seguinte forma:
   
-seu\_projeto\_distribuido/  
+src/main/java  
 ├── no-central/  
 │   ├── pom.xml  
 │   └── src/main/java/NoCentral.java  
