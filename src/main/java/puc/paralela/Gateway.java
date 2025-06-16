@@ -16,27 +16,44 @@ import org.json.JSONObject;
  * e uma thread separada os envia para o Nó de Borda via TCP.
  */
 class Gateway {
-    private static final int GATEWAY_UDP_PORT = 12347;
-    private static final String BORDA_NODE_IP = "127.0.0.1"; // IP do Nó de Borda
-    private static final int BORDA_NODE_TCP_PORT = 12346;
+    private static final int GATEWAY_UDP_PORT = 12345; // Porta local do Gateway para receber dos brincos
 
-    // Fila bloqueante para armazenar dados recebidos antes de enviar para o nó de borda
+    private static String BORDA_NODE_IP;      // Definido via argumento de linha de comando
+    private static int BORDA_NODE_TCP_PORT; // Definido via argumento de linha de comando
+
     private static ArrayBlockingQueue<String> dataQueue = new ArrayBlockingQueue<>(100);
 
-    /**
-     * Inicia o ouvinte UDP para receber dados dos brincos.
-     */
+    public static void main(String[] args) {
+        if (args.length < 2) {
+            System.out.println("Uso: java -jar gateway-1.0-SNAPSHOT-jar-with-dependencies.jar <IP_NOBORDA> <PORTA_NOBORDA>");
+            return;
+        }
+
+        BORDA_NODE_IP = args[0];
+        BORDA_NODE_TCP_PORT = Integer.parseInt(args[1]);
+
+        startUdpReceiver();
+        startTcpDispatcher();
+        try {
+            Thread.currentThread().join();
+        } catch (InterruptedException e) {
+            System.err.println("Gateway main thread interrupted.");
+            Thread.currentThread().interrupt();
+        }
+    }
+
     private static void startUdpReceiver() {
         new Thread(() -> {
             try (DatagramSocket socket = new DatagramSocket(GATEWAY_UDP_PORT)) {
                 System.out.println("Gateway ouvindo dados dos brincos em UDP Porta " + GATEWAY_UDP_PORT);
+                System.out.println("Conectando-se ao Nó de Borda em " + BORDA_NODE_IP + ":" + BORDA_NODE_TCP_PORT);
                 byte[] buffer = new byte[4096];
                 while (true) {
                     DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
                     socket.receive(packet);
                     String receivedData = new String(packet.getData(), 0, packet.getLength());
                     try {
-                        dataQueue.put(receivedData); // Adiciona à fila
+                        dataQueue.put(receivedData);
                         System.out.println("Gateway recebeu dados do brinco e enfileirou: " + receivedData);
                     } catch (InterruptedException e) {
                         Thread.currentThread().interrupt();
@@ -51,14 +68,11 @@ class Gateway {
         }).start();
     }
 
-    /**
-     * Inicia o despachante TCP que pega dados da fila e os envia para o Nó de Borda.
-     */
     private static void startTcpDispatcher() {
         new Thread(() -> {
             while (true) {
                 try {
-                    String dataToSend = dataQueue.take(); // Bloqueia até haver dados na fila
+                    String dataToSend = dataQueue.take();
                     sendDataToBordaNode(dataToSend);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
@@ -71,10 +85,6 @@ class Gateway {
         }).start();
     }
 
-    /**
-     * Envia dados para o Nó de Borda via TCP. Inclui lógica de retentativa básica.
-     * @param data Dados JSON em formato String.
-     */
     private static void sendDataToBordaNode(String data) {
         int maxRetries = 5;
         int currentRetry = 0;
@@ -82,17 +92,17 @@ class Gateway {
 
         while (!sent && currentRetry < maxRetries) {
             try (Socket bordaSocket = new Socket(BORDA_NODE_IP, BORDA_NODE_TCP_PORT)) {
-                bordaSocket.setSoTimeout(5000); // Timeout de 5 segundos para conexão/escrita
+                bordaSocket.setSoTimeout(5000);
                 OutputStream os = bordaSocket.getOutputStream();
-                os.write((data + "\n").getBytes()); // Adiciona '\n' como delimitador de mensagem
+                os.write((data + "\n").getBytes());
                 os.flush();
-                System.out.println("Gateway enviou dados para o Nó de Borda: " + data);
+                System.out.println("Gateway enviou dados para o Nó de Borda (via " + BORDA_NODE_IP + ":" + BORDA_NODE_TCP_PORT + "): " + data);
                 sent = true;
             } catch (IOException e) {
                 currentRetry++;
-                System.err.println("Erro ao conectar ou enviar para o Nó de Borda. Retentativa " + currentRetry + "/" + maxRetries + ": " + e.getMessage());
+                System.err.println("Erro ao conectar ou enviar para o Nó de Borda (retentativa " + currentRetry + "/" + maxRetries + "): " + e.getMessage());
                 try {
-                    TimeUnit.SECONDS.sleep(2 * currentRetry); // Aumenta o tempo de espera
+                    TimeUnit.SECONDS.sleep(2 * currentRetry);
                 } catch (InterruptedException ie) {
                     Thread.currentThread().interrupt();
                     System.err.println("Retentativa interrompida.");
@@ -102,19 +112,5 @@ class Gateway {
         }
         if (!sent) {
             System.err.println("Falha ao enviar dados para o Nó de Borda após " + maxRetries + " retentativas: " + data);
-            // Lógica para lidar com falha persistente: logar, notificar, descartar, etc.
         }
     }
-
-    public static void main(String[] args) {
-        startUdpReceiver();
-        startTcpDispatcher();
-        // O main thread pode esperar indefinidamente ou ser usado para outras tarefas de gerenciamento.
-        try {
-            Thread.currentThread().join(); // Mantém o main thread vivo
-        } catch (InterruptedException e) {
-            System.err.println("Gateway main thread interrupted.");
-            Thread.currentThread().interrupt();
-        }
-    }
-}

@@ -17,14 +17,19 @@ import org.json.JSONObject;
  * Em um sistema real, aqui haveria a integração com um banco de dados distribuído
  **/
 
-public class Central 
-{
-    private static final int CENTRAL_NODE_TCP_PORT = 12345;
+public class Central {
+    private static final int CENTRAL_NODE_TCP_PORT = 12347;
 
-    //Neste projeto, um arquivo json está servindo como uma espécie de banco de dados
     private static final List<JSONObject> DATABASE = Collections.synchronizedList(new LinkedList<>());
 
     private static ExecutorService clientHandlerPool = Executors.newFixedThreadPool(5); // Pool para lidar com conexões de nó de borda
+
+    private static final double FARM_CENTER_LAT = -19.92;
+    private static final double FARM_CENTER_LON = -43.93;
+
+    // Raio de desvio máximo em graus para simular uma área de 2 hectares.
+    private static final double MAX_LAT_DEVIATION = 0.0008; // Desvio máximo em latitude (graus)
+    private static final double MAX_LON_DEVIATION = 0.0008; // Desvio máximo em longitude (graus)
 
     public static void main(String[] args) {
         startCentralServer();
@@ -91,12 +96,34 @@ public class Central
             DATABASE.add(data);
             System.out.println("Nó Central: Dados do brinco " + data.optString("brinco_id", "N/A") + " armazenados. Total de registros: " + DATABASE.size());
 
-            // Exemplo de ação do Nó Central: verificar alertas de febre
+            JSONObject localizacao = data.optJSONObject("localizacao");
+            if (localizacao != null) {
+                double currentLat = localizacao.optDouble("lat");
+                double currentLon = localizacao.optDouble("lon");
+
+                // Verifica se o boi está fora dos limites definidos
+                boolean outsideFarm = false;
+                if (Math.abs(currentLat - FARM_CENTER_LAT) > MAX_LAT_DEVIATION ||
+                    Math.abs(currentLon - FARM_CENTER_LON) > MAX_LON_DEVIATION) {
+                    outsideFarm = true;
+                }
+
+                if (outsideFarm) {
+                    System.out.println("Nó Central: !!! ALERTA DE LIMITE !!! O brinco " + data.optString("brinco_id") +
+                                       " está FORA da fazenda! Localização: (" +
+                                       String.format("%.6f", currentLat) + ", " + String.format("%.6f", currentLon) + ")");
+                } else {
+                    System.out.println("Nó Central: Brinco " + data.optString("brinco_id") + " dentro dos limites da fazenda.");
+                }
+            } else {
+                System.out.println("Nó Central: Dados de localização ausentes ou inválidos para o brinco " + data.optString("brinco_id", "N/A"));
+            }
+
+
             if (data.optBoolean("alerta_febre", false)) {
                 System.out.println("Nó Central: ALERTA DE FEBRE CONFIRMADO para " + data.optString("brinco_id") + " (Temp: " + data.optString("temperatura") + "°C)");
             }
-
-            // Em um sistema real, você executaria queries, análises, ML aqui.
+            
         } catch (Exception e) {
             System.err.println("Erro ao armazenar dados no Nó Central: " + e.getMessage() + ". Dados: " + dataString);
         }
