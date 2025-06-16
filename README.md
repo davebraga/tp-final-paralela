@@ -112,7 +112,7 @@ Você precisará de vários terminais abertos para este processo.
    >java -jar target/Central-1.0-SNAPSHOT-jar-with-dependencies.jar
 
    O Nó Central começará a ouvir na porta 12345\.  
-2. Exponha o Nó Central com ngrok:  
+2. Se possuir o plano pago, você pode expor o Nó Central com ngrok:  
    Em um novo terminal, execute:  
 
    >ngrok tcp 12345
@@ -123,6 +123,8 @@ Você precisará de vários terminais abertos para este processo.
    >tcp://0.tcp.ngrok.io:XXXXX). 
    
    Você usará 0.tcp.ngrok.io como \<IP\_NOCENTRAL\> e XXXXX como \<PORTA\_NOCENTRAL\>.
+
+   **Caso contrário, execute como um servidor localhost**
 
 #### **b. Iniciar Nó de Borda**
 
@@ -137,6 +139,9 @@ Você precisará de vários terminais abertos para este processo.
    
    >java -jar target/Borda-1.0-SNAPSHOT-jar-with-dependencies.jar 0.tcp.ngrok.io 12345 
    
+   ou 
+
+   >java -jar target/Borda-1.0-SNAPSHOT-jar-with-dependencies.jar 127.0.0.1 12345
    (substitua pela sua porta ngrok).
 
    O Nó de Borda começará a ouvir localmente na porta 12346 e se conectará ao Nó Central via ngrok.  
@@ -152,6 +157,8 @@ Você precisará de vários terminais abertos para este processo.
    >tcp://0.tcp.ngrok.io:YYYYY). 
    Você usará 0.tcp.ngrok.io como \<IP\_NOBORDA\> e YYYYY como \<PORTA\_NOBORDA\>.
 
+   **Caso contrário, execute como um servidor localhost**
+
 #### **c. Iniciar Gateway**
 
 1. Execute o Gateway:  
@@ -160,8 +167,12 @@ Você precisará de vários terminais abertos para este processo.
    java -jar target/Gateway-1.0-SNAPSHOT-jar-with-dependencies.jar \<IP\_NOBORDA\> \<PORTA\_NOBORDA\>
 
    Exemplo: 
-   >java -jar target/Gateway-1.0-SNAPSHOT-jar-with-dependencies.jar 0.tcp.ngrok.io 23456 
+   >java -jar target/Gateway-1.0-SNAPSHOT-jar-with-dependencies.jar 0.tcp.ngrok.io 12346 
    (substitua pela sua porta ngrok).
+
+   ou 
+
+   >java -jar target/Gateway-1.0-SNAPSHOT-jar-with-dependencies.jar 127.0.0.1 12346
 
    O Gateway começará a ouvir localmente na porta 12347 (UDP) e se conectará ao Nó de Borda via ngrok.  
 2. Exponha o Gateway com ngrok:  
@@ -174,15 +185,19 @@ Você precisará de vários terminais abertos para este processo.
 #### **d. Iniciar Brinco Simulado(s)**
 
 1. Execute o Brinco Simulado:  
-   Em um novo terminal, navegue até a pasta brinco-simulado/ e execute, usando um ID para o brinco e o endereço ngrok do Gateway:  
+   Em um novo terminal, navegue até a pasta Brinco/ e execute, usando um ID para o brinco e o endereço ngrok do Gateway:  
 
-   >cd seu\_projeto\_distribuido/brinco-simulado/ 
-   java -jar target/brinco-simulado-10-SNAPSHOT-jar-with-dependencies.jar \<ID\_BRINCO\> \<IP\_GATEWAY\> \<PORTA\_GATEWAY\>
+   >cd seu\_projeto\_distribuido/Brinco/ 
+   java -jar target/Brinco-10-SNAPSHOT-jar-with-dependencies.jar \<ID\_BRINCO\> \<IP\_GATEWAY\> \<PORTA\_GATEWAY\>
 
    Exemplo: 
-   >java \-jar target/brinco-simulado-1.0-SNAPSHOT-jar-with-dependencies.jar VACA001 0.tcp.ngrok.io 34567 
+   >java \-jar target/Brinco-1.0-SNAPSHOT-jar-with-dependencies.jar VACA001 0.tcp.ngrok.io 12347 
 
    (substitua pela sua porta ngrok).
+
+   ou 
+
+   >java -jar target/Brinco-1.0-SNAPSHOT-jar-with-dependencies.jar VACA001 127.0.0.1 12347
      
    Você pode abrir múltiplos terminais para simular vários brincos (com IDs diferentes, ex: VACA002, BOI001).
 

@@ -25,10 +25,10 @@
 
     <modules>
         <!-- Lista de todos os submódulos (nomes dos diretórios) -->
-        <module>src/main/java/puc/paralela/Central</module>
-        <module>src/main/java/puc/paralela/Borda</module>
-        <module>src/main/java/puc/paralela/Gateway</module>
-        <module>src/main/java/puc/paralela/Brinco</module>
+        <module>Central</module>
+        <module>Borda</module>
+        <module>Gateway</module>
+        <module>Brinco</module>
     </modules>
 
     <dependencyManagement>
