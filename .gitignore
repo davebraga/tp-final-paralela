@@ -1,0 +1,37 @@
+# Arquivos gerados pelo Maven
+/target/
+pom.xml.tag
+pom.xml.releaseBackup
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/wrapper/maven-wrapper.jar
+.mvn/wrapper/maven-wrapper.properties
+
+# Arquivos de log
+*.log
+
+# Arquivos de configurações de IDEs
+# IntelliJ IDEA
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Eclipse
+.project
+.classpath
+.settings/
+.apt_generated/
+.factorypath
+.sts4-cache/
+
+# VS Code
+.vscode/
+
+# Histórico de console
+.history
+
+# Ignorar o executável ngrok e logs
+ngrok
+*.ngrok.log

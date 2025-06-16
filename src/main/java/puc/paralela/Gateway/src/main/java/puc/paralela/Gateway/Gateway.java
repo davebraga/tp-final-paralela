@@ -1,4 +1,4 @@
-package puc.paralela;
+package puc.paralela.Gateway;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -114,3 +114,4 @@ class Gateway {
             System.err.println("Falha ao enviar dados para o Nó de Borda após " + maxRetries + " retentativas: " + data);
         }
     }
+}

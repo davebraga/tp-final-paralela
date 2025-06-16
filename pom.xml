@@ -25,10 +25,10 @@
 
     <modules>
         <!-- Lista de todos os submódulos (nomes dos diretórios) -->
-        <module>no-central</module>
-        <module>no-borda</module>
-        <module>gateway</module>
-        <module>brinco-simulado</module>
+        <module>src/main/java/puc/paralela/Central</module>
+        <module>src/main/java/puc/paralela/Borda</module>
+        <module>src/main/java/puc/paralela/Gateway</module>
+        <module>src/main/java/puc/paralela/Brinco</module>
     </modules>
 
     <dependencyManagement>
@@ -55,10 +55,6 @@
         <plugin>
           <artifactId>maven-resources-plugin</artifactId>
           <version>3.0.2</version>
-        </plugin>
-        <plugin>
-          <artifactId>maven-compiler-plugin</artifactId>
-          <version>3.8.0</version>
         </plugin>
         <plugin>
           <artifactId>maven-surefire-plugin</artifactId>

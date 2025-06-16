@@ -67,29 +67,29 @@ Gateway (M)  ───► Nó de Borda (O)
 
 ## **Como Executar o Projeto**
 
-Cada módulo (no-central, no-borda, gateway, brinco-simulado) deve ser tratado como um projeto Maven separado.
+Cada módulo (Central, Borda, Gateway, Brinco) deve ser tratado como um projeto Maven separado.
 
 ### **1\. Estrutura do Projeto**
 
 Os diretórios estão organizados da seguinte forma:
 
 src/main/java  
-├── no-central/  
+├── Central/  
 │   ├── pom.xml  
-│   └── src/main/java/NoCentral.java  
-├── no-borda/  
+│   └── src/main/java/Central.java  
+├── Borda/  
 │   ├── pom.xml  
-│   └── src/main/java/NoBorda.java  
-├── gateway/  
+│   └── src/main/java/Borda.java  
+├── Gateway/  
 │   ├── pom.xml  
 │   └── src/main/java/Gateway.java  
-└── brinco-simulado/  
+└── Brinco/  
     ├── pom.xml  
-    └── src/main/java/BrincoSimulado.java
+    └── src/main/java/Brinco.java
 
 ### **2\. Configuração do pom.xml**
 
-Certifique-se de que cada diretório de módulo (no-central, no-borda, gateway, brinco-simulado) contenha seu respectivo arquivo pom.xml conforme fornecido nas instruções anteriores.  
+Certifique-se de que cada diretório de módulo (Central, Borda, Gateway, Brinco) contenha seu respectivo arquivo pom.xml conforme fornecido nas instruções anteriores.  
 **Importante:** Verifique e ajuste a versão do maven.compiler.source e maven.compiler.target no pom.xml para corresponder à versão do seu JDK instalado (ex: 17).
 
 ### **3\. Compilar Cada Módulo**
@@ -107,53 +107,67 @@ Você precisará de vários terminais abertos para este processo.
 #### **a. Iniciar Nó Central**
 
 1. **Execute o Nó Central:**  
-   >cd seu\_projeto\_distribuido/no-central/  
-   >java \-jar target/no-central-1.0-SNAPSHOT-jar-with-dependencies.jar
+   >cd seu\_projeto\_distribuido/Central/  
+
+   >java -jar target/Central-1.0-SNAPSHOT-jar-with-dependencies.jar
 
    O Nó Central começará a ouvir na porta 12345\.  
 2. Exponha o Nó Central com ngrok:  
    Em um novo terminal, execute:  
-   ngrok tcp 12345
+
+   >ngrok tcp 12345
 
    Anote o endereço Forwarding que o ngrok exibir 
 
    Ex:
-   >tcp://0.tcp.ngrok.io:XXXXX). Você usará 0.tcp.ngrok.io como \<IP\_NOCENTRAL\> e XXXXX como \<PORTA\_NOCENTRAL\>.
+   >tcp://0.tcp.ngrok.io:XXXXX). 
+   
+   Você usará 0.tcp.ngrok.io como \<IP\_NOCENTRAL\> e XXXXX como \<PORTA\_NOCENTRAL\>.
 
 #### **b. Iniciar Nó de Borda**
 
 1. Execute o Nó de Borda:  
-   Em um novo terminal, navegue até a pasta no-borda/ e execute, usando o endereço ngrok do Nó Central:  
+   Em um novo terminal, navegue até a pasta Borda/ e execute, usando o endereço ngrok do Nó Central:  
 
-   >cd seu\_projeto\_distribuido/no-borda/  
-   java \-jar target/no-borda-1.0-SNAPSHOT-jar-with-dependencies.jar \<IP\_NOCENTRAL\> \<PORTA\_NOCENTRAL\>
+   >cd seu\_projeto\_distribuido/Borda/ 
+
+   >java -jar target/Borda-1.0-SNAPSHOT-jar-with-dependencies.jar \<IP\_NOCENTRAL\> \<PORTA\_NOCENTRAL\>
 
    Exemplo: 
    
-   >java \-jar target/no-borda-1.0-SNAPSHOT-jar-with-dependencies.jar 0.tcp.ngrok.io 12345 (substitua pela sua porta ngrok).
+   >java -jar target/Borda-1.0-SNAPSHOT-jar-with-dependencies.jar 0.tcp.ngrok.io 12345 
+   
+   (substitua pela sua porta ngrok).
 
    O Nó de Borda começará a ouvir localmente na porta 12346 e se conectará ao Nó Central via ngrok.  
+
 2. Exponha o Nó de Borda com ngrok:  
-   Em um novo terminal, execute:  
-   ngrok tcp 12346
+   Em um novo terminal, execute: 
+
+   >ngrok tcp 12346
 
    Anote o novo endereço Forwarding 
 
    Ex: 
-   >tcp://0.tcp.ngrok.io:YYYYY). Você usará 0.tcp.ngrok.io como \<IP\_NOBORDA\> e YYYYY como \<PORTA\_NOBORDA\>.
+   >tcp://0.tcp.ngrok.io:YYYYY). 
+   Você usará 0.tcp.ngrok.io como \<IP\_NOBORDA\> e YYYYY como \<PORTA\_NOBORDA\>.
 
 #### **c. Iniciar Gateway**
 
 1. Execute o Gateway:  
-   Em um novo terminal, navegue até a pasta gateway/ e execute, usando o endereço ngrok do Nó de Borda:  
-   cd seu\_projeto\_distribuido/gateway/  
-   java \-jar target/gateway-1.0-SNAPSHOT-jar-with-dependencies.jar \<IP\_NOBORDA\> \<PORTA\_NOBORDA\>
+   Em um novo terminal, navegue até a pasta Gateway/ e execute, usando o endereço ngrok do Nó de Borda:  
+   cd seu\_projeto\_distribuido/Gateway/  
+   java -jar target/Gateway-1.0-SNAPSHOT-jar-with-dependencies.jar \<IP\_NOBORDA\> \<PORTA\_NOBORDA\>
 
-   Exemplo: java \-jar target/gateway-1.0-SNAPSHOT-jar-with-dependencies.jar 0.tcp.ngrok.io 23456 (substitua pela sua porta ngrok).  
+   Exemplo: 
+   >java -jar target/Gateway-1.0-SNAPSHOT-jar-with-dependencies.jar 0.tcp.ngrok.io 23456 
+   (substitua pela sua porta ngrok).
+
    O Gateway começará a ouvir localmente na porta 12347 (UDP) e se conectará ao Nó de Borda via ngrok.  
 2. Exponha o Gateway com ngrok:  
-   Em um novo terminal, execute:  
-   ngrok tcp 12347
+   Em um novo terminal, execute:
+
+   >ngrok tcp 12347
 
    Anote o novo endereço Forwarding (ex: tcp://0.tcp.ngrok.io:ZZZZZ). Você usará 0.tcp.ngrok.io como \<IP\_GATEWAY\> e ZZZZZ como \<PORTA\_GATEWAY\>.
 
@@ -162,10 +176,14 @@ Você precisará de vários terminais abertos para este processo.
 1. Execute o Brinco Simulado:  
    Em um novo terminal, navegue até a pasta brinco-simulado/ e execute, usando um ID para o brinco e o endereço ngrok do Gateway:  
 
-   >cd seu\_projeto\_distribuido/brinco-simulado/ java \-jar target/brinco-simulado-1.0-SNAPSHOT-jar-with-dependencies.jar \<ID\_BRINCO\> \<IP\_GATEWAY\> \<PORTA\_GATEWAY\>
+   >cd seu\_projeto\_distribuido/brinco-simulado/ 
+   java -jar target/brinco-simulado-10-SNAPSHOT-jar-with-dependencies.jar \<ID\_BRINCO\> \<IP\_GATEWAY\> \<PORTA\_GATEWAY\>
 
    Exemplo: 
-   >java \-jar target/brinco-simulado-1.0-SNAPSHOT-jar-with-dependencies.jar VACA001 0.tcp.ngrok.io 34567 (substitua pela sua porta ngrok).  
+   >java \-jar target/brinco-simulado-1.0-SNAPSHOT-jar-with-dependencies.jar VACA001 0.tcp.ngrok.io 34567 
+
+   (substitua pela sua porta ngrok).
+     
    Você pode abrir múltiplos terminais para simular vários brincos (com IDs diferentes, ex: VACA002, BOI001).
 
 Observe os logs em todos os terminais para ver o fluxo de dados e os alertas sendo gerados.

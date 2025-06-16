@@ -1,4 +1,4 @@
-package puc.paralela;
+package puc.paralela.src.main.java.Borda;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -10,19 +10,28 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import org.json.JSONObject;
 
 public class Borda {
-        private static final int BORDA_NODE_TCP_PORT = 12346;
-    private static final String CENTRAL_NODE_IP = "127.0.0.1"; // IP do Nó Central
-    private static final int CENTRAL_NODE_TCP_PORT = 12345;
+     private static final int BORDA_NODE_TCP_PORT = 12346; // Porta local do Nó de Borda
 
-    private static ExecutorService clientHandlerPool = Executors.newFixedThreadPool(5); // Pool para lidar com conexões de gateway
-    private static ArrayBlockingQueue<String> dataQueueToCentral = new ArrayBlockingQueue<>(100); // Fila para o nó central
+    private static String CENTRAL_NODE_IP;   // Definido via argumento de linha de comando
+    private static int CENTRAL_NODE_TCP_PORT; // Definido via argumento de linha de comando
+
+    private static ExecutorService clientHandlerPool = Executors.newFixedThreadPool(5);
+    private static ArrayBlockingQueue<String> dataQueueToCentral = new ArrayBlockingQueue<>(100);
 
     public static void main(String[] args) {
+        if (args.length < 2) {
+            System.out.println("Uso: java -jar Borda-1.0-SNAPSHOT-jar-with-dependencies.jar <IP_NOCENTRAL> <PORTA_NOCENTRAL>");
+            return;
+        }
+
+        CENTRAL_NODE_IP = args[0];
+        CENTRAL_NODE_TCP_PORT = Integer.parseInt(args[1]);
+
         startBordaServer();
         startCentralNodeDispatcher();
-        // O main thread pode esperar indefinidamente
         try {
             Thread.currentThread().join();
         } catch (InterruptedException e) {
@@ -31,15 +40,13 @@ public class Borda {
         }
     }
 
-    /**
-     * Inicia o servidor TCP para receber dados dos Gateways.
-     */
     private static void startBordaServer() {
         new Thread(() -> {
             try (ServerSocket serverSocket = new ServerSocket(BORDA_NODE_TCP_PORT)) {
                 System.out.println("Nó de Borda ouvindo em TCP Porta " + BORDA_NODE_TCP_PORT + " para Gateways.");
+                System.out.println("Conectando-se ao Nó Central em " + CENTRAL_NODE_IP + ":" + CENTRAL_NODE_TCP_PORT);
                 while (true) {
-                    Socket clientSocket = serverSocket.accept(); // Aceita uma nova conexão
+                    Socket clientSocket = serverSocket.accept();
                     clientHandlerPool.submit(() -> handleGatewayConnection(clientSocket));
                 }
             } catch (IOException e) {
@@ -51,16 +58,12 @@ public class Borda {
         }).start();
     }
 
-    /**
-     * Lida com a conexão de um Gateway, recebendo e processando os dados.
-     * @param clientSocket Socket do Gateway conectado.
-     */
     private static void handleGatewayConnection(Socket clientSocket) {
         String clientAddress = clientSocket.getInetAddress().getHostAddress();
         System.out.println("Nó de Borda: Conexão recebida do Gateway " + clientAddress);
         try (BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()))) {
             String line;
-            while ((line = in.readLine()) != null) { // Lê linhas (mensagens delimitadas por '\n')
+            while ((line = in.readLine()) != null) {
                 processAndForwardData(line);
             }
         } catch (IOException e) {
@@ -75,10 +78,6 @@ public class Borda {
         }
     }
 
-    /**
-     * Processa os dados recebidos (detecção de anomalias) e os enfileira para o Nó Central.
-     * @param dataString Dados JSON em formato String.
-     */
     private static void processAndForwardData(String dataString) {
         try {
             JSONObject data = new JSONObject(dataString);
@@ -86,14 +85,14 @@ public class Borda {
             double temperatura = Double.parseDouble(data.optString("temperatura", "0.0"));
 
             boolean alertaFebre = false;
-            if (temperatura > 39.5) { // Exemplo de anomalia: febre (temperatura > 39.5°C)
+            if (temperatura > 39.5) {
                 System.out.println("ALERTA DO NÓ DE BORDA! Brinco " + brincoId + ": Temperatura alta (" + temperatura + "°C).");
                 alertaFebre = true;
             }
             data.put("alerta_febre", alertaFebre);
-            data.put("processed_at_borda_ms", System.currentTimeMillis()); // Adiciona timestamp de processamento
+            data.put("processed_at_borda_ms", System.currentTimeMillis());
 
-            dataQueueToCentral.put(data.toString()); // Adiciona à fila para envio ao central
+            dataQueueToCentral.put(data.toString());
             System.out.println("Nó de Borda processou e enfileirou dados do brinco " + brincoId + " para o Nó Central.");
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -103,14 +102,11 @@ public class Borda {
         }
     }
 
-    /**
-     * Inicia o despachante TCP que pega dados da fila e os envia para o Nó Central.
-     */
     private static void startCentralNodeDispatcher() {
         new Thread(() -> {
             while (true) {
                 try {
-                    String dataToSend = dataQueueToCentral.take(); // Bloqueia até haver dados na fila
+                    String dataToSend = dataQueueToCentral.take();
                     sendDataToCentralNode(dataToSend);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
@@ -123,10 +119,6 @@ public class Borda {
         }).start();
     }
 
-    /**
-     * Envia dados para o Nó Central via TCP. Inclui lógica de retentativa básica.
-     * @param data Dados JSON em formato String.
-     */
     private static void sendDataToCentralNode(String data) {
         int maxRetries = 5;
         int currentRetry = 0;
@@ -134,15 +126,15 @@ public class Borda {
 
         while (!sent && currentRetry < maxRetries) {
             try (Socket centralSocket = new Socket(CENTRAL_NODE_IP, CENTRAL_NODE_TCP_PORT)) {
-                centralSocket.setSoTimeout(5000); // Timeout de 5 segundos
+                centralSocket.setSoTimeout(5000);
                 OutputStream os = centralSocket.getOutputStream();
                 os.write((data + "\n").getBytes());
                 os.flush();
-                System.out.println("Nó de Borda enviou dados para o Nó Central: " + data);
+                System.out.println("Nó de Borda enviou dados para o Nó Central (via " + CENTRAL_NODE_IP + ":" + CENTRAL_NODE_TCP_PORT + "): " + data);
                 sent = true;
             } catch (IOException e) {
                 currentRetry++;
-                System.err.println("Erro ao conectar ou enviar para o Nó Central. Retentativa " + currentRetry + "/" + maxRetries + ": " + e.getMessage());
+                System.err.println("Erro ao conectar ou enviar para o Nó Central (retentativa " + currentRetry + "/" + maxRetries + "): " + e.getMessage());
                 try {
                     TimeUnit.SECONDS.sleep(2 * currentRetry);
                 } catch (InterruptedException ie) {

@@ -1,4 +1,4 @@
-package puc.paralela;
+package puc.paralela.Brinco;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -16,7 +16,14 @@ class Brinco{
     private String brincoId;
     private Random random = new Random();
 
-    public BrincoSimulado(String id) {
+    // Constantes de limite da fazenda (replicadas do Nó Central para lógica de geração)
+    // Usadas para calcular coordenadas que garantam que o brinco esteja fora ou dentro
+    private static final double FARM_CENTER_LAT = -19.92;
+    private static final double FARM_CENTER_LON = -43.93;
+    private static final double MAX_LAT_DEVIATION = 0.0008; // Desvio máximo em latitude (graus)
+    private static final double MAX_LON_DEVIATION = 0.0008; // Desvio máximo em longitude (graus)
+
+    public Brinco(String id) {
         this.brincoId = id;
     }
 
@@ -69,14 +76,14 @@ class Brinco{
 
     public static void main(String[] args) {
         if (args.length < 3) {
-            System.out.println("Uso: java -jar brinco-simulado-1.0-SNAPSHOT-jar-with-dependencies.jar <ID_BRINCO> <IP_GATEWAY> <PORTA_GATEWAY>");
+            System.out.println("Uso: java -jar Brinco-1.0-SNAPSHOT-jar-with-dependencies.jar <ID_BRINCO> <IP_GATEWAY> <PORTA_GATEWAY>");
             return;
         }
         String id = args[0];
         GATEWAY_IP = args[1];
         GATEWAY_PORT = Integer.parseInt(args[2]);
 
-        BrincoSimulado brinco = new BrincoSimulado(id);
+        Brinco brinco = new Brinco(id);
         System.out.println("Simulando Brinco " + id + ". Conectando-se ao Gateway em " + GATEWAY_IP + ":" + GATEWAY_PORT + ". Pressione Ctrl+C para parar.");
 
         while (true) {
